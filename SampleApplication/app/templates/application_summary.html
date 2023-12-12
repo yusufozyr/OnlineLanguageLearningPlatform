@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Application Summary</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container text-center">
+        <h1>Application Summary</h1>
+        
+
+        <h2>Companies (Descending Order of Quotas)</h2>
+
+        <table class="table table-bordered table-striped mt-3">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Company ID</th>
+                    <th>Company Name</th>
+                    <th>Quota</th>
+                    <th>GPA Threshold</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in desc %}
+                <tr>
+                    <td>{{ application.cid }}</td>
+                    <td>{{ application.cname }}</td>
+                    <td>{{ application.quota }}</td>
+                    <td>{{ application.gpa_threshold }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <h2>Company with Maximum GPA Threshold</h2>
+        <table class="table table-bordered table-striped mt-3">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Company ID</th>
+                    <th>Company Name</th>
+                    <th>GPA Threshold</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ max_threshold_company.cid }}</td>
+                    <td>{{ max_threshold_company.cname }}</td>
+                    <td>{{ gpa_thresholds.max_gpa_threshold|float|round(2) }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Company with Minimum GPA Threshold</h2>
+        <table class="table table-bordered table-striped mt-3">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Company ID</th>
+                    <th>Company Name</th>
+                    <th>GPA Threshold</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ min_threshold_company.cid }}</td>
+                    <td>{{ min_threshold_company.cname }}</td>
+                    <td>{{ gpa_thresholds.min_gpa_threshold|float|round(2) }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Number of Companies Applied by the Student in Each City</h2>
+        <table class="table table-bordered table-striped mt-3">
+            <thead class="thead-dark">
+                <tr>
+                    <th>City</th>
+                    <th>Application Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for city_count in city_count %}
+                <tr>
+                    <td>{{ city_count.city }}</td>
+                    <td>{{ city_count.application_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <h2>Companies with Maximum and Minimum Quotas</h2>
+        <table class="table table-bordered table-striped mt-3">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Attribute</th>
+                    <th>Company</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Company with Maximum Quota</td>
+                    <td>{{ company_with_max_quota.cname }}</td>
+                </tr>
+                <tr>
+                    <td>Company with Minimum Quota</td>
+                    <td>{{ company_with_min_quota.cname }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a href="{{ url_for('tasks') }}" class="btn btn-primary mt-3">Back to Tasks</a>
+
+        <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+    </div>
+</body>
+</html>

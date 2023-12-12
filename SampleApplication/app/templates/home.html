@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home Page</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container text-center">
+        <h1>WelcomeX to the Internship Application System</h1>
+        <p>If you don't have an account, please register:</p>
+        <a href="{{ url_for('registerL.registerL') }}" class="btn btn-primary">Register as a Learner</a>
+        <!-- <a href="{{ url_for('registerL.registerL') }}" class="btn btn-primary">Register as a Teacher</a>
+        <a href="{{ url_for('registerL.registerL') }}" class="btn btn-primary">Register as a Admin</a> -->
+
+        <p class="mt-2">Already have an account? You can log in:</p>
+        <a href="{{ url_for('login.login') }}" class="btn btn-success">Login</a>
+    </div>
+</body>
+</html>
