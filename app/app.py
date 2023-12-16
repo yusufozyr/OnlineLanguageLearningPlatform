@@ -17,7 +17,7 @@ app.config['MYSQL_DB'] = 'projectdb'
 
 #MySQL.init_app(app)
 mysql = MySQL(app)  
-
+#yamaç
 
 
 @app.route('/')
