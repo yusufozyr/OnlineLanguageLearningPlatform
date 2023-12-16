@@ -12,12 +12,12 @@ app.secret_key = 'abcdefgh'
   
 app.config['MYSQL_HOST'] = 'db'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'root'
-app.config['MYSQL_DB'] = 'projectdb'
+app.config['MYSQL_PASSWORD'] = 'password'
+app.config['MYSQL_DB'] = 'cs353hw4db'
 
 #MySQL.init_app(app)
 mysql = MySQL(app)  
-#yamaç
+
 
 
 @app.route('/')
@@ -123,173 +123,84 @@ def login():
         username = request.form['username']
         password = request.form['password']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM User WHERE U_id = % s AND password = % s', (username, password, ))
+        cursor.execute('SELECT * FROM User WHERE U_id = %s AND password = %s', (username, password, ))
         user = cursor.fetchone()
-        if user:              
+        if user:
             session['loggedin'] = True
             session['userid'] = user['U_id']
             session['username'] = user['U_id']
-            message = 'Logged in successfully!'
+
+            cursor.execute('SELECT * FROM Learner WHERE U_id = %s', (username,))
+            learner = cursor.fetchone()
+            if learner:
+                message = 'Learner Logged in successfully!'
+                return redirect(url_for('menuL'))
+
+            cursor.execute('SELECT * FROM Teacher WHERE U_id = %s', (username,))
+            teacher = cursor.fetchone()
+            if teacher:
+                message = 'Teacher Logged in successfully!'
+                return redirect(url_for('menuT'))
+
+        else:
+            message = 'Please enter correct User Name and Password!'
+        
+    return render_template('login.html', message = message)
+
+@app.route('/menuL', methods =['GET', 'POST'])
+def menuL():
+    
+    return render_template('menuL.html')
+
+@app.route('/select_current_language', methods=['GET', 'POST'])
+def select_current_language():
+    if request.method == 'POST':
+        language_name = request.form.get('language')
+        level = request.form.get('level')
+
+        # Obtain Language_id based on language name and level
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT Language_id FROM Language WHERE Language_name = %s AND Language_level = %s',
+            (language_name, level)
+        )
+        language_data = cursor.fetchone()
+
+        if language_data:
+            language_id = language_data['Language_id']
+
+            # Insert data into Current_Level table
+            cursor.execute(
+                'INSERT INTO Current_Level (Language_id, U_id) VALUES (%s, %s)',
+                (language_id, session['userid'])
+            )
+            mysql.connection.commit()
+
+            # You may want to redirect to another page or display a success message
             return redirect(url_for('menuL'))
         else:
-            message = 'Please enter correct User Name and Password !'
-    return render_template('login.html', message = message)
+            # Handle the case where the language was not found
+            flash('Selected language not found.')
 
-app.route('/menuL', methods =['GET', 'POST'])
-def menuL():
-    return render_template('login.html', message = message)
+            # You may want to redirect to another page or display a success message
+            return redirect(url_for('menuL'))
 
+    # Fetch languages from the Language table
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT DISTINCT Language_name FROM Language')
+    languages = [language['Language_name'] for language in cursor.fetchall()]
 
-
-
-
-
-
-
-# @app.route('/tasks', methods=['GET', 'POST'])
-# def tasks():
-#     if 'loggedin' in session:
-#         student_id = session['userid']
-        
-#         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-#         cursor.execute('SELECT c.cid, c.cname, c.quota, c.gpa_threshold FROM company c '
-#                        'JOIN apply a ON c.cid = a.cid '
-#                        'WHERE a.sid = %s', (student_id,))
-#         internship_applications = cursor.fetchall()
-        
-#         cursor.execute('SELECT COUNT(*) AS count FROM apply WHERE sid = %s', (student_id,))
-#         application_count = cursor.fetchone()
-        
-#         return render_template('tasks.html', internship_applications=internship_applications, application_count=application_count)
-#     return redirect(url_for('login'))
-# @app.route('/apply_internship', methods=['GET', 'POST'])
-# def apply_internship():
-#     success_message = None
-#     error_message = None
-
-#     if request.method == 'POST':
-#         student_id = session['userid']
-#         company_id = request.form['company_id']
-
-#         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-#         query = """
-#         SELECT c.cid
-#         FROM company c
-#         LEFT JOIN apply a ON c.cid = a.cid AND a.sid = %s
-#         WHERE a.sid IS NULL
-#             AND (c.quota > (SELECT COUNT(*) FROM apply ap WHERE ap.cid = c.cid) OR c.quota IS NULL)
-#             AND (c.gpa_threshold <= (SELECT gpa FROM student s WHERE s.sid = %s) OR c.gpa_threshold IS NULL)
-#         """
-#         cursor.execute(query, (student_id, student_id))
-#         applicable_companies = [result['cid'] for result in cursor.fetchall()]
-
-#         if company_id not in applicable_companies:
-#             error_message = f'Company ID {company_id} is not applicable for you.'
-#         else:
-#             insert_query = "INSERT INTO apply (sid, cid) VALUES (%s, %s)"
-#             cursor.execute(insert_query, (student_id, company_id))
-#             mysql.connection.commit()
-
-#             success_message = 'Application submitted successfully!'
-#             return redirect(url_for('tasks'))
-#     student_id = session['userid']
-#     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-#     query = """
-#     SELECT c.cid, c.cname
-#     FROM company c
-#     LEFT JOIN apply a ON c.cid = a.cid AND a.sid = %s
-#     WHERE a.sid IS NULL
-#         AND (c.quota > (SELECT COUNT(*) FROM apply ap WHERE ap.cid = c.cid) OR c.quota IS NULL)
-#         AND (c.gpa_threshold <= (SELECT gpa FROM student s WHERE s.sid = %s) OR c.gpa_threshold IS NULL)
-#     """
-#     cursor.execute(query, (student_id, student_id))
-#     available_companies = cursor.fetchall()
-
-#     return render_template('application_form.html', available_companies=available_companies, success_message=success_message, error_message=error_message)
+    return render_template('select_current_language.html', languages=languages)
+#yamaç
+@app.route('/select_goal_language', methods=['GET', 'POST'])
+def select_goal_language():
+        return render_template('select_current_language.html')
 
 
-# @app.route('/cancel_application/<cid>', methods=['GET'])
-# def cancel_application(cid):
-#     if 'loggedin' in session:
-#         student_id = session['userid']
-        
-#         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-#         cursor.execute('DELETE FROM apply WHERE sid = %s AND cid = %s', (student_id, cid))
-#         mysql.connection.commit()
-        
-#         if cursor.rowcount > 0:
-#             return redirect(url_for('tasks', success_message='Application canceled successfully'))
-#         else:
-#             return redirect(url_for('tasks', error_message='Failed to cancel the application'))
+@app.route('/menuT', methods =['GET', 'POST'])
+def menuT():
+    return render_template('menuT.html')
 
-#     return redirect(url_for('login'))
-
-# @app.route('/application_summary', methods=['GET'])
-# def application_summary():
-#     if 'loggedin' in session:
-
-#         student_id = session['userid']
-
-#         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-#         cursor.execute('SELECT c.cid, c.cname, c.quota, c.gpa_threshold FROM company c '
-#                        'JOIN apply a ON c.cid = a.cid '
-#                        'WHERE a.sid = %s ORDER BY c.quota DESC', (student_id,))
-#         desc = cursor.fetchall()
-
-#         cursor.execute('SELECT MAX(c.gpa_threshold) AS max_gpa_threshold, MIN(c.gpa_threshold) AS min_gpa_threshold '
-#                        'FROM company c JOIN apply a ON c.cid = a.cid WHERE a.sid = %s', (student_id,))
-#         gpa_thresholds = cursor.fetchone()
-
-#         cursor.execute('SELECT c.cid, c.cname '
-#                        'FROM company c JOIN apply a ON c.cid = a.cid '
-#                        'WHERE a.sid = %s AND c.gpa_threshold = %s', (student_id, gpa_thresholds['max_gpa_threshold']))
-#         max_threshold_company = cursor.fetchone()
-
-#         cursor.execute('SELECT c.cid, c.cname '
-#                        'FROM company c JOIN apply a ON c.cid = a.cid '
-#                        'WHERE a.sid = %s AND c.gpa_threshold = %s', (student_id, gpa_thresholds['min_gpa_threshold']))
-#         min_threshold_company = cursor.fetchone()
-
-#         cursor.execute('SELECT c.city, COUNT(c.cid) AS application_count '
-#                        'FROM company c JOIN apply a ON c.cid = a.cid '
-#                        'WHERE a.sid = %s GROUP BY c.city', (student_id,))
-#         city_count = cursor.fetchall()
-
-#         cursor.execute('SELECT c.cname FROM company c '
-#                        'JOIN apply a ON c.cid = a.cid '
-#                        'WHERE a.sid = %s ORDER BY c.quota DESC LIMIT 1', (student_id,))
-#         company_with_max_quota = cursor.fetchone()
-
-#         # Fetch the company with the minimum quota
-#         cursor.execute('SELECT c.cname FROM company c '
-#                        'JOIN apply a ON c.cid = a.cid '
-#                        'WHERE a.sid = %s ORDER BY c.quota ASC LIMIT 1', (student_id,))
-#         company_with_min_quota = cursor.fetchone()
-        
-#         return render_template('application_summary.html',
-#                                desc=desc,
-#                                gpa_thresholds=gpa_thresholds,
-#                                max_threshold_company=max_threshold_company,
-#                                min_threshold_company=min_threshold_company,
-#                                city_count=city_count,
-#                                company_with_max_quota=company_with_max_quota,
-#                                company_with_min_quota=company_with_min_quota)
-#     return redirect(url_for('login'))
-
-
-# @app.route('/logout')
-# def logout():
-#     if 'loggedin' in session:
-#         session.pop('loggedin', None)
-#         session.pop('userid', None)
-#         session.pop('username', None)
-#         session.pop('email', None)
-#     return redirect(url_for('login'))
-# @app.route('/analysis', methods =['GET', 'POST'])
-
-
-# def analysis():
-#     return "Analysis page"
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
