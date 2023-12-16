@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Available Companies</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container text-center">
+        
+        {% if success_message %}
+            <div class="alert alert-success">
+                {{ success_message }}
+            </div>
+        {% endif %}
+        
+        {% if error_message %}
+            <div class="alert alert-danger">
+                {{ error_message }}
+            </div>
+        {% endif %}
+
+        <h2>Available Companies for you {{ session['username'] }}:</h2>
+        <ul class="list-group">
+            <li class="list-group-item">
+                <div class="row">
+                    <div class="col"><strong>Company ID</strong></div>
+                    <div class="col"><strong>Company Name</strong></div>
+                </div>
+            </li>
+            {% for company in available_companies %}
+                <li class="list-group-item">
+                    <div class="row">
+                        <div class="col">{{ company.cid }}</div>
+                        <div class="col">{{ company.cname }}</div>
+                        
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <form method="POST" action="{{ url_for('apply_internship') }}">
+            <div class="form-group">
+                <label for="company_id">Enter Company ID:</label>
+                <input type="text" class="form-control" name="company_id" id="company_id" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </form>
+
+        <a href="{{ url_for('tasks') }}" class="btn btn-secondary mt-3">Back to Tasks</a>
+    </div>
+</body>
+</html>
