@@ -147,10 +147,46 @@ def login():
         
     return render_template('login.html', message = message)
 
+def get_learner_info(user_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('''
+        SELECT User.full_name, User.email, GROUP_CONCAT(Language.Language_name) as languages, GROUP_CONCAT(Language.Language_level) as levels
+        FROM User
+        LEFT JOIN Current_Level ON User.U_id = Current_Level.U_id
+        LEFT JOIN Language ON Current_Level.Language_id = Language.Language_id
+        WHERE User.U_id = %s
+        GROUP BY User.full_name, User.email
+    ''', (user_id,))
+    learner_info = cursor.fetchone()
+    return learner_info
+
+def get_goal_info(user_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('''
+        SELECT User.full_name, User.email, GROUP_CONCAT(Language.Language_name) as languages, GROUP_CONCAT(Language.Language_level) as levels
+        FROM User
+        LEFT JOIN Goal_Level ON User.U_id = Goal_Level.U_id
+        LEFT JOIN Language ON Goal_Level.Language_id = Language.Language_id
+        WHERE User.U_id = %s
+        GROUP BY User.full_name, User.email
+    ''', (user_id,))
+    goal_info = cursor.fetchone()
+    return goal_info
+
 @app.route('/menuL', methods =['GET', 'POST'])
 def menuL():
-    
-    return render_template('menuL.html')
+    if 'loggedin' in session and session['loggedin']:
+        # Assuming you store user_id in the session during login
+        user_id = session['userid']
+
+        # Fetch learner information
+        learner_info = get_learner_info(user_id)
+        goal_info = get_goal_info(user_id)
+
+        return render_template('menuL.html', learner=learner_info, goal = goal_info)
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
 
 @app.route('/select_current_language', methods=['GET', 'POST'])
 def select_current_language():
@@ -191,11 +227,71 @@ def select_current_language():
     languages = [language['Language_name'] for language in cursor.fetchall()]
 
     return render_template('select_current_language.html', languages=languages)
-#yamaç
+
+def update_goal_language(user_id, language_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    # Check if the goal language already exists for the user
+    cursor.execute(
+        'SELECT * FROM Goal_Level WHERE U_id = %s AND Language_id = %s',
+        (user_id, language_id)
+    )
+    
+    goal_language_data = cursor.fetchone()
+
+    if not goal_language_data:
+        # Insert data into Goal_Level table
+        cursor.execute(
+            'INSERT INTO Goal_Level (Language_id, U_id) VALUES (%s, %s)',
+            (language_id, user_id)
+        )
+        mysql.connection.commit()
+        return True  # Success
+    else:
+        return False  # Language already selected as a goal
+
 @app.route('/select_goal_language', methods=['GET', 'POST'])
 def select_goal_language():
-        return render_template('select_current_language.html')
+    if request.method == 'POST':
+        language_name = request.form.get('language')
+        level = request.form.get('level')
 
+        # Obtain Language_id based on language name and level
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT Language_id FROM Language WHERE Language_name = %s AND Language_level = %s',
+            (language_name, level)
+        )
+        language_data = cursor.fetchone()
+
+        if language_data:
+            language_id = language_data['Language_id']
+
+            # Update Goal_Level table
+            success = update_goal_language(session['userid'], language_id)
+
+            if success:
+                # Redirect to another page or display a success message
+                return redirect(url_for('menuL'))
+            else:
+                # Handle the case where the language is already a goal language
+                flash('Selected language is already a goal language.')
+
+                # Redirect to another page or display a message
+                return redirect(url_for('menuL'))
+        else:
+            # Handle the case where the language was not found
+            flash('Selected language not found.')
+
+            # Redirect to another page or display a message
+            return redirect(url_for('menuL'))
+
+    # Fetch languages from the Language table
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT DISTINCT Language_name FROM Language')
+    languages = [language['Language_name'] for language in cursor.fetchall()]
+
+    return render_template('select_goal_language.html', languages=languages)
 
 @app.route('/menuT', methods =['GET', 'POST'])
 def menuT():

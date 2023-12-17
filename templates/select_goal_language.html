@@ -1,0 +1,33 @@
+<!-- select_goal_language.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Goal Language</title>
+</head>
+<body>
+    <h1>Select Goal Language</h1>
+
+    <form action="{{ url_for('select_goal_language') }}" method="post">
+        <label for="language">Select Goal Language:</label>
+        <select name="language" id="language">
+            {% for language in languages %}
+                <option value="{{ language }}">{{ language }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="level">Select Level:</label>
+        <select name="level" id="level">
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+        </select>
+
+        <button type="submit">Save Selection</button>
+    </form>
+</body>
+</html>

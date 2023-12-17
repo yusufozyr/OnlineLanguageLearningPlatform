@@ -1,0 +1,82 @@
+<!-- menuL.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu for Learner</title>
+    <style>
+        /* Add some basic styling for the profile section */
+        .profile-section {
+            float: right;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-right: 20px;
+        }
+
+        /* Add styling for the buttons section */
+        .buttons-section {
+            float: left;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-left: 20px;
+        }
+
+        /* Style the buttons */
+        .select-button {
+            display: block;
+            margin-bottom: 10px;
+            text-decoration: none;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Menu for Learner</h1>
+
+    <!-- Buttons Section -->
+    <div class="buttons-section">
+        <a href="{{ url_for('select_current_language') }}" class="select-button">Select Current Language</a>
+        <a href="{{ url_for('select_goal_language') }}" class="select-button">Select Goal Language</a>
+    </div>
+
+    <!-- Profile Section -->
+    <div class="profile-section">
+        <h3>Learner Profile</h3>
+        <p>Full Name: {{ learner.full_name }}</p>
+        <p>Email: {{ learner.email }}</p>
+        
+        {% if learner.languages %}
+            <p>Current Languages:</p>
+            <ul>
+                {% for i in range(learner.languages.count(',')) %}
+                    {% set language = learner.languages.split(',')[i] %}
+                    {% set level = learner.levels.split(',')[i] %}
+                    <li>{{ language }} (Level: {{ level }})</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No current languages selected</p>
+        {% endif %}
+
+        {% if goal.languages %}
+            <p>Goal Languages:</p>
+            <ul>
+                {% for i in range(goal.languages.count(',')) %}
+                    {% set goal_language = goal.languages.split(',')[i] %}
+                    {% set goal_level = goal.levels.split(',')[i] %}
+                    <li>{{ goal_language }} (Goal Level: {{ goal_level }})</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No goal languages selected</p>
+        {% endif %}
+        <!-- Add more information if needed -->
+    </div>
+</body>
+</html>

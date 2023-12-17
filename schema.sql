@@ -43,6 +43,13 @@ CREATE TABLE Current_Level (
     FOREIGN KEY (Language_id) REFERENCES Language(Language_id),
     FOREIGN KEY (U_id) REFERENCES User(U_id)
 );
+CREATE TABLE Goal_Level (
+    Language_id INT,
+    U_id VARCHAR(255),
+    PRIMARY KEY (Language_id, U_id),
+    FOREIGN KEY (Language_id) REFERENCES Language(Language_id),
+    FOREIGN KEY (U_id) REFERENCES User(U_id)
+);
 
 -- Inserting a new User (Learner)
 INSERT INTO User (U_id, full_name, email, password, nationality, date_of_birth)
@@ -128,4 +135,3 @@ INSERT INTO Language (Language_name, Language_level) VALUES
     ('Russian', 'B2'),
     ('Russian', 'C1'),
     ('Russian', 'C2');
-
